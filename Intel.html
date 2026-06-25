@@ -1,0 +1,157 @@
+  <!DOCTYPE html>
+  <html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>一鍵網址轉換</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Arial, "Microsoft JhengHei", sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .box {
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        background: #111827;
+        border: 1px solid #334155;
+        border-radius: 24px;
+        padding: 32px 24px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 28px;
+      }
+
+      p {
+        margin: 0 0 24px;
+        color: #94a3b8;
+        line-height: 1.6;
+      }
+
+      button {
+        width: 100%;
+        border: none;
+        border-radius: 18px;
+        padding: 20px;
+        font-size: 22px;
+        font-weight: bold;
+        color: white;
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+      }
+
+      button:active {
+        transform: scale(0.98);
+      }
+
+      .status {
+        margin-top: 22px;
+        min-height: 48px;
+        color: #22c55e;
+        font-weight: bold;
+        line-height: 1.5;
+        word-break: break-all;
+      }
+
+      .small {
+        margin-top: 18px;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="box">
+      <h1>一鍵轉換網址</h1>
+      <p>按下按鈕後，自動讀取剪貼簿連結，轉換後直接複製回剪貼簿。</p>
+
+      <button onclick="convertFromClipboard()">轉換並複製</button>
+
+      <div id="status" class="status"></div>
+
+      <div class="small">
+        支援 X / Twitter / Instagram Reel<br />
+        注意：瀏覽器可能會要求剪貼簿權限
+      </div>
+    </main>
+
+    <script>
+      const statusText = document.getElementById("status");
+
+      async function convertFromClipboard() {
+        try {
+          statusText.textContent = "讀取剪貼簿中...";
+
+          const clipboardText = await navigator.clipboard.readText();
+          const url = extractFirstUrl(clipboardText);
+
+          if (!url) {
+            statusText.textContent = "剪貼簿內沒有找到網址";
+            return;
+          }
+
+          const convertedUrl = convertUrl(url);
+
+          if (!convertedUrl) {
+            statusText.textContent = "不支援的網址：" + url;
+            return;
+          }
+
+          await navigator.clipboard.writeText(convertedUrl);
+
+          statusText.textContent = "已轉換並複製：\n" + convertedUrl;
+        } catch (error) {
+          statusText.textContent = "無法讀取剪貼簿，請確認瀏覽器權限或使用 HTTPS 開啟。";
+        }
+      }
+
+      function extractFirstUrl(text) {
+        const match = text.match(/https?:\/\/[^\s]+/i);
+        return match ? match[0] : "";
+      }
+
+      function convertUrl(url) {
+        if (/^https?:\/\/(www\.)?(x|twitter)\.com\//i.test(url)) {
+          return url
+            .replace(/^https?:\/\/(www\.)?x\.com/i, "https://fxtwitter.com")
+            .replace(/^https?:\/\/(www\.)?twitter\.com/i, "https://fxtwitter.com");
+        }
+
+        if (/^https?:\/\/(www\.)?instagram\.com\/reel\//i.test(url)) {
+          const match = url.match(/^https?:\/\/(www\.)?instagram\.com\/reel\/([^/?#]+)\/?/i);
+
+          if (!match || !match[2]) {
+            return "";
+          }
+
+          const reelCode = match[2];
+          return "https://kkinstagram.com/reel/" + reelCode + "/";
+        }
+
+        return "";
+      }
+    </script>
+  </body>
+  </html>
